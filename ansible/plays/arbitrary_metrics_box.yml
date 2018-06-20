@@ -1,0 +1,10 @@
+---
+- hosts: "{{ lookup('env','ENVIRONMENT') }}_arbitrary_metrics_box"
+  connection: local
+  become: yes
+  become_user: 'root'
+  gather_facts: true
+  roles:
+    - base
+    - arbitrary_metrics_box
+    - test_goss

@@ -1,0 +1,82 @@
+---
+- name: Install required Python dependencies.
+  pip:
+    name: pyopenssl
+    version: 18.0.0
+
+- name: Install Carbon and dependencies.
+  apt:
+    name:
+      - graphite-web
+      - graphite-carbon
+      - postgresql
+      - libpq-dev
+      - python-psycopg2
+      - apache2
+      - libapache2-mod-wsgi
+
+- name: Create Postgresql database.
+  postgresql_db:
+    name: "{{ postgres_db }}"
+  become_user: postgres
+
+- name: Create Postgresql user.
+  postgresql_user:
+    db: "{{ postgres_db }}"
+    name: "{{ postgres_db_user }}"
+    password: "{{ postgres_db_password }}"
+    encrypted: yes
+    priv: ALL
+  become_user: postgres
+
+- name: Create configuration files.
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: root
+    group: root
+    mode: "644"
+  with_items:
+    - {src: "local_settings.py.j2", dest: "/etc/graphite/local_settings.py"}
+    - {src: "graphite-carbon.j2", dest: "/etc/default/graphite-carbon"}
+    - {src: "carbon.conf.j2", dest: "/etc/carbon/carbon.conf"}
+    - {src: "storage-schemas.conf.j2", dest: "/etc/carbon/storage-schemas.conf"}
+    - {src: "storage-aggregation.conf.j2", dest: "/etc/carbon/storage-aggregation.conf"}
+    - {src: "apache2-graphite.conf.j2", dest: "/etc/apache2/sites-available/apache2-graphite.conf"}
+
+- name: Run the commands to sync the database to create the correct structure and enable Apache site.
+  command: "{{ item }}"
+  with_items:
+    - "graphite-manage migrate auth"
+    - "graphite-manage migrate"
+    - "a2dissite 000-default"
+    - "a2ensite apache2-graphite"
+
+- name: Adding Graphite user to www-data group.
+  user:
+    name: _graphite
+    groups: www-data
+    append: yes
+
+- name: Update the owner and group of Graphite logs directory.
+  file:
+    path: "/var/log/graphite/"
+    owner: www-data
+    group: www-data
+    mode: "775"
+    recurse: yes
+
+- name: Resatrt carbon-cache and Apache. Then ensure they are running.
+  service:
+    name: "{{ item }}"
+    state: restarted
+    enabled: yes
+  with_items:
+    - "carbon-cache"
+    - "apache2"
+
+- name: Copy copy Goss test file for this role.
+  copy:
+    src: "goss_arbitrary_metrics_box.yml"
+    dest: "/opt/goss/goss_arbitrary_metrics_box.yml"
+    mode: "775"

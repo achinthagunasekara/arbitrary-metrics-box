@@ -1,0 +1,43 @@
+file:
+  /etc/graphite/local_settings.py:
+    exists: true
+    mode: "0644"
+    size: 15884
+    owner: root
+    group: root
+    filetype: file
+  /etc/default/graphite-carbon:
+    exists: true
+    mode: "0644"
+    size: 75
+    owner: root
+    group: root
+    filetype: file
+  /etc/carbon/carbon.conf:
+    exists: true
+    mode: "0644"
+    size: 26229
+    owner: root
+    group: root
+    filetype: file
+  /etc/carbon/storage-schemas.conf:
+    exists: true
+    mode: "0644"
+    size: 909
+    owner: root
+    group: root
+    filetype: file
+  /etc/carbon/storage-aggregation.conf:
+    exists: true
+    mode: "0644"
+    size: 827
+    owner: root
+    group: root
+    filetype: file
+  /etc/apache2/sites-available/apache2-graphite.conf:
+    exists: true
+    mode: "0644"
+    size: 729
+    owner: root
+    group: root
+    filetype: file

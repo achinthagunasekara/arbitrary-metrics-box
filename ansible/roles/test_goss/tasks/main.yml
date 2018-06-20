@@ -1,0 +1,33 @@
+---
+- name: Install GOSS binary.
+  shell: "curl -fsSL https://goss.rocks/install | sh"
+
+- name: Gather GOSS tests, /opt/goss/*.yml.
+  shell: |
+    ls -A1 *.yml
+  register: goss_tests
+  args:
+    chdir: /opt/goss/
+
+- name: Run GOSS tests, /opt/goss/goss_tests.txt.
+  goss:
+    path: "/opt/goss/{{ item }}"
+    format: junit
+    output_file: "/opt/goss/results/{{ item }}.xml"
+  with_items: "{{ goss_tests.stdout_lines }}"
+  ignore_errors: True
+  environment:
+    PATH: $PATH:/usr/local/bin/
+  register: goss_results
+
+- name: Goss, Archive results for collection.
+  archive:
+    path: /opt/goss/results/
+    dest: /opt/goss/results/goss_results.zip
+    format: zip
+
+- name: Goss, Update goss file permissions required for downloading.
+  file:
+    path: /opt/goss/
+    mode: 0755
+    recurse: yes

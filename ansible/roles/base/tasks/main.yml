@@ -1,0 +1,25 @@
+---
+- name: Update system.
+  apt:
+    name: "*"
+  state: latest
+
+- name: Install base dependencies.
+  apt:
+    name:
+      - vim
+
+- name: Create directories needed for running Goss tests.
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: 0755
+  with_items:
+    - /opt/goss/results
+    - /opt/goss
+
+- name: Copy copy Goss test file for this role.
+  copy:
+    src: "goss_base.yml"
+    dest: "/opt/goss/goss_base.yml"
+    mode: "775"
